@@ -1,9 +1,5 @@
 $main-color: skyblue;
 
-body {
-  background-color: $main-color;
-}
-
 .root {
   &--loading {
     &::after {
@@ -16,6 +12,28 @@ body {
       line-height: 100vh;
       vertical-align: middle;
       color: white;
+      z-index: 100;
     }
   }
+}
+
+.todo-item {
+  &__remove-btn {
+    display: none;
+    margin-left: 5px;
+  }
+  &:hover &__remove-btn {
+    display: inline;
+  }
+}
+
+.index {
+  &__navbar {
+    margin-bottom: 20px;
+  }
+}
+
+.login {
+  margin-top: 20px;
+  width: 500px;
 }
