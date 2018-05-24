@@ -4,26 +4,7 @@ const todoAPI = axios.create({
   baseURL: process.env.API_URL
 });
 
-function login(token) {
-  localStorage.setItem('token', token);
-  todoAPI.defaults.headers['Authorization'] = `Bearer ${token}`;
-}
-
-function logout() {
-  localStorage.removeItem('token');
-  delete todoAPI.defaults.headers['Authorization'];
-}
-
 const rootEl = document.querySelector('.root');
-
-todoAPI.interceptors.request.use(function (config) {
-  rootEl.classList.add('root--loading');
-  return config;
-});
-todoAPI.interceptors.response.use(function (response) {
-  rootEl.classList.remove('root--loading');
-  return response;
-})
 
 const templates = {
   login: document.querySelector('#login').content,
@@ -36,16 +17,39 @@ function render(frag) {
   rootEl.appendChild(frag);
 }
 
+function login(token) {
+  localStorage.setItem('token', token);
+  todoAPI.defaults.headers['Authorization'] = `Bearer ${token}`;
+}
+
+function logout() {
+  localStorage.removeItem('token');
+  delete todoAPI.defaults.headers['Authorization'];
+}
+
+// 로딩 인디케이터 표시 함수. Promise 객체를 인수로 받습니다.
+// (비동기 함수 역시 Promise 객체를 반환하는 점에 주목하세요!)
+async function withLoading(promise) {
+  rootEl.classList.add('root--loading');
+  const value = await promise;
+  rootEl.classList.remove('root--loading');
+  return value;
+}
+
 async function loginPage() {
+  // DocumentFragment는 문서에 삽입된 뒤에는 비워지기 때문에,
+  // appendChild가 일어나기 전에 미리 엘리먼트 객체를 선택해 놓는 것이 좋습니다.
+  // https://developer.mozilla.org/ko/docs/Web/API/DocumentFragment
   const frag = document.importNode(templates.login, true);
   const formEl = frag.querySelector('.login__form');
+
   formEl.addEventListener('submit', async e => {
     e.preventDefault();
     const payload = {
       username: e.target.elements.username.value,
       password: e.target.elements.password.value,
     };
-    const res = await todoAPI.post('/users/login', payload);
+    const res = await withLoading(todoAPI.post('/users/login', payload));
     login(res.data.token);
     indexPage();
   })
@@ -53,6 +57,9 @@ async function loginPage() {
 }
 
 async function indexPage() {
+  // DocumentFragment는 문서에 삽입된 뒤에는 비워지기 때문에,
+  // appendChild가 일어나기 전에 미리 엘리먼트 객체를 선택해 놓는 것이 좋습니다.
+  // https://developer.mozilla.org/ko/docs/Web/API/DocumentFragment
   const frag = document.importNode(templates.index, true);
   const listEl = frag.querySelector('.index__todo-list');
   const formEl = frag.querySelector('.index__form');
@@ -64,7 +71,7 @@ async function indexPage() {
       body: e.target.elements.body.value,
       complete: false,
     };
-    const res = await todoAPI.post('/todos', payload);
+    const res = await withLoading(todoAPI.post('/todos', payload));
     indexPage();
   });
 
@@ -73,8 +80,10 @@ async function indexPage() {
     loginPage();
   });
 
-  const res = await todoAPI.get('/todos');
+  const res = await withLoading(todoAPI.get('/todos'));
 
+  // forEach 메소드 대신 for...of 루프를 사용할 수도 있습니다.
+  // res.data 배열에 들어있는 객체에 대해 분해대입을 했습니다.
   for (const {id, body, complete} of res.data) {
     const itemFrag = document.importNode(templates.todoItem, true);
     const itemEl = itemFrag.querySelector('.todo-item');
@@ -85,17 +94,19 @@ async function indexPage() {
     bodyEl.textContent = body;
     if (complete) {
       itemEl.classList.add('todo-item--complete');
+      // checkbox 타입의 input 태그에 'checked' 어트리뷰트를 넣어주면
+      // 체크가 된 상태로 만들 수 있습니다.
       checkboxEl.setAttribute('checked', '');
     }
     checkboxEl.addEventListener('click', async e => {
       e.preventDefault();
-      const res = await todoAPI.patch(`/todos/${id}`, {
+      const res = await withLoading(todoAPI.patch(`/todos/${id}`, {
         complete: !complete
-      });
+      }));
       indexPage();
     })
     removeBtnEl.addEventListener('click', async e => {
-      const res = await todoAPI.delete(`/todos/${id}`);
+      const res = await withLoading(todoAPI.delete(`/todos/${id}`));
       indexPage();
     })
 
@@ -105,6 +116,8 @@ async function indexPage() {
   render(frag);
 }
 
+// 만약 로그인이 되어있던 상태라면 할 일 목록을 보여주고,
+// 아니면 로그인 페이지를 보여줍니다.
 const token = localStorage.getItem('token');
 if (token) {
   login(token);
