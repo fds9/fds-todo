@@ -4,11 +4,47 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>중간 프로젝트 템플릿</title>
+  <title>FDS TODO</title>
   <link rel="stylesheet" href="./index.scss">
 </head>
 <body>
-  <h1>중간 프로젝트 템플릿</h1>
+  <div class="root"></div>
+
+  <template id="login">
+    <div class="login">
+      <h1 class="login__header">로그인</h1>
+      <form class="login__form">
+        <input name="username" type="text" class="login__username-input">
+        <input name="password" type="password" class="login__password-input">
+        <button class="login__submit-btn">전송</button>
+      </form>
+    </div>
+  </template>
+
+  <template id="index">
+    <div class="index">
+      <h1 class="index__header">할 일 목록</h1>
+      <button class="index__logout-btn">로그아웃</button>
+      <div class="index__todo-list">
+        <!-- todo-item -->
+      </div>
+      <form class="index__form">
+        <input name="body" type="text">
+        <button class="index__submit-btn">전송</button>
+      </form>
+    </div>
+  </template>
+
+  <template id="todo-item">
+    <div class="todo-item">
+      <input type="checkbox" name="complete" class="todo-item__checkbox">
+      <span class="todo-item__body">
+        <!-- body -->
+      </span>
+      <button class="todo-item__remove-btn">삭제</button>
+    </div>
+  </template>
+
   <script src="./index.js"></script>
 </body>
 </html>
